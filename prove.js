@@ -28,7 +28,7 @@ MerkleTreeProof.prototype._transform = function (idx, enc, cb) {
   cb()
 }
 
-// MerkleTreeProof.prototype.end = function () {
-//   this.push(this._generator._root)
-//   return Transform.prototype.end.apply(this, arguments)
-// }
+MerkleTreeProof.prototype.end = function () {
+  this.push(this._generator._root)
+  return Transform.prototype.end.apply(this, arguments)
+}

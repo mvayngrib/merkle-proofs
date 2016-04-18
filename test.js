@@ -2,17 +2,19 @@
 var crypto = require('crypto')
 var tape = require('tape')
 var merkleStream = require('merkle-tree-stream')
-var proofStream = require('./')
+var proofStream = require('./prove')
+var newVerifier = require('./verify')
+var MERKLE_OPTS = {
+  leaf: function (leaf) {
+    return hash([leaf.data])
+  },
+  parent: function (a, b) {
+    return hash([a.hash, b.hash])
+  }
+}
 
-tape('prove one', function (t) {
-  var stream = merkleStream({
-    leaf: function (leaf) {
-      return hash([leaf.data])
-    },
-    parent: function (a, b) {
-      return hash([a.hash, b.hash])
-    }
-  })
+tape('prove one, verify', function (t) {
+  var stream = merkleStream(MERKLE_OPTS)
 
   var nodes = []
   stream.on('data', function (node) {
@@ -26,7 +28,9 @@ tape('prove one', function (t) {
 
   stream.end()
 
-  stream.on('end', function () {
+  stream.on('end', prove)
+
+  function prove () {
     var pstream = proofStream({ nodes:nodes })
     var proof = []
     pstream.on('data', function (node) {
@@ -34,15 +38,25 @@ tape('prove one', function (t) {
     })
 
     pstream.on('end', function () {
-      t.equal(proof.length, 2)
-      t.equal(proof[0].index, 2)
-      t.equal(proof[1].index, 5)
-      t.end()
+      t.deepEqual(getIndices(proof), [2, 5, 3])
+      verify(proof)
     })
 
     pstream.write(0)
     pstream.end()
-  })
+  }
+
+  function verify (proof) {
+    var verifier = newVerifier({
+      leaf: MERKLE_OPTS.leaf,
+      parent: MERKLE_OPTS.parent,
+      proof: proof
+    })
+
+    t.ok(verifier.verify('a', 0))
+    t.notOk(verifier.verify('b', 2))
+    t.end()
+  }
 })
 
 tape('prove multiple', function (t) {
@@ -77,11 +91,8 @@ tape('prove multiple', function (t) {
     })
 
     pstream.on('end', function () {
-      t.equal(proof.length, 6)
-      t.deepEqual(proof.map(function (node) {
-        return node.index
-      }), [
-        2, 5, 11, 6, 1, 4
+      t.deepEqual(getIndices(proof), [
+        2, 5, 11, 6, 1, 4, 7
       ])
 
       t.end()
@@ -98,4 +109,10 @@ function hash (list) {
   var sha = crypto.createHash('sha256')
   for (var i = 0; i < list.length; i++) sha.update(list[i])
   return sha.digest()
+}
+
+function getIndices (nodes) {
+  return nodes.map(function (node) {
+    return node.index
+  })
 }
