@@ -1,7 +1,7 @@
 {
   "name": "merkle-tree-proof-stream",
   "version": "1.0.0",
-  "description": "A stream that generates a merkle tree proof based on the incoming data.",
+  "description": "generate and verify merkle proofs",
   "main": "index.js",
   "scripts": {
     "test": "node test"
