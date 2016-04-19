@@ -1,46 +1,57 @@
 var flat = require('flat-tree')
 
-module.exports = MerkleProofVerifier
+module.exports = merkleProofVerifier
 
 /**
  * @param {Array} opts.proof      list of nodes including root
  * @param {Function} opts.leaf    leaf hasher function
  * @param {Function} opts.parent  parent hasher function
  */
-function MerkleProofVerifier (opts) {
-  if (!(this instanceof MerkleProofVerifier)) return new MerkleProofVerifier(opts)
-
+function merkleProofVerifier (opts) {
   var proof = opts.proof
   var root = proof[proof.length - 1]
-  this._rootIdx = root.index
-  this._nodeByIndex = {}
+  var rootIdx = root.index
+  var nodeByIndex = {}
 
   for (var i = 0; i < proof.length; i++) {
     var node = proof[i]
-    this._nodeByIndex[node.index] = node
+    nodeByIndex[node.index] = node
   }
 
-  this._leaf = opts.leaf
-  this._parent = opts.parent
+  var leafHasher = opts.leaf
+  var parentHasher = opts.parent
+
+  return function verify (leaf, idx) {
+    var cur = leafHasher({ data: new Buffer(leaf) })
+    while (idx !== rootIdx) {
+      var siblingIdx = flat.sibling(idx)
+      var sibling = nodeByIndex[siblingIdx]
+      if (!sibling) return false
+
+      var left = idx < siblingIdx ? cur : sibling
+      var right = left === cur ? sibling : cur
+
+      cur = parentHasher(
+        wrap(left),
+        wrap(right)
+      )
+
+      idx = flat.parent(idx)
+    }
+
+    return equals(cur, root.hash)
+  }
 }
 
-MerkleProofVerifier.prototype.verify = function (leaf, idx) {
-  var cur = this._leaf({ data: new Buffer(leaf) })
-  var curIdx = idx
-  while (curIdx !== this._rootIdx) {
-    var siblingIdx = flat.sibling(idx)
-    var sibling = this._nodeByIndex[siblingIdx]
-    if (!sibling) return false
+function wrap (hash) {
+  return hash.hash ? hash : { hash: hash }
+}
 
-    var left = idx < siblingIdx ? cur : sibling
-    var right = left === cur ? sibling : cur
+function equals (a, b) {
+  if (a.length !== b.length) return false
 
-    cur = this._parent(
-      { hash: left.hash || left },
-      { hash: right.hash || right }
-    )
-
-    curIdx = flat.parent(curIdx)
+  for (var i = 0, l = a.length; i < l; i++) {
+    if (a[i] !== b[i]) return false
   }
 
   return true

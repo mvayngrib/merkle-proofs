@@ -3,7 +3,7 @@ var crypto = require('crypto')
 var tape = require('tape')
 var merkleStream = require('merkle-tree-stream')
 var proofStream = require('./prove')
-var newVerifier = require('./verify')
+var verifier = require('./verify')
 var MERKLE_OPTS = {
   leaf: function (leaf) {
     return hash([leaf.data])
@@ -47,19 +47,19 @@ tape('prove one, verify', function (t) {
   }
 
   function verify (proof) {
-    var verifier = newVerifier({
+    var verify = verifier({
       leaf: MERKLE_OPTS.leaf,
       parent: MERKLE_OPTS.parent,
       proof: proof
     })
 
-    t.ok(verifier.verify('a', 0))
-    t.notOk(verifier.verify('b', 2))
+    t.ok(verify('a', 0))
+    t.notOk(verify('b', 2))
     t.end()
   }
 })
 
-tape('prove multiple', function (t) {
+tape('prove multiple, verify', function (t) {
   var stream = merkleStream({
     leaf: function (leaf) {
       return hash([leaf.data])
@@ -83,7 +83,9 @@ tape('prove multiple', function (t) {
 
   stream.end()
 
-  stream.on('end', function () {
+  stream.on('end', prove)
+
+  function prove () {
     var pstream = proofStream({ nodes:nodes })
     var proof = []
     pstream.on('data', function (node) {
@@ -95,14 +97,31 @@ tape('prove multiple', function (t) {
         2, 5, 11, 6, 1, 4, 7
       ])
 
-      t.end()
+      verify(proof)
     })
 
     pstream.write(0)
     pstream.write(4)
     pstream.write(6)
     pstream.end()
-  })
+  }
+
+  function verify (proof) {
+    var verify = verifier({
+      leaf: MERKLE_OPTS.leaf,
+      parent: MERKLE_OPTS.parent,
+      proof: proof
+    })
+
+    t.ok(verify('a', 0))
+    t.ok(verify('c', 4))
+    t.ok(verify('d', 6))
+    debugger
+    t.notOk(verify('a', 1))
+    t.notOk(verify('a', 2))
+    t.notOk(verify('b', 2))
+    t.end()
+  }
 })
 
 function hash (list) {
