@@ -18,6 +18,7 @@ function MerkleProofGenerator (nodes) {
   var height = nearestPowerOf2(nodes.length)
   this._rootIdx = Math.pow(2, height - 1) - 1
   this._root = this._nodes[this._rootIdx]
+  this._proof = []
 }
 
 MerkleProofGenerator.prototype.add = function (idx) {
@@ -28,17 +29,25 @@ MerkleProofGenerator.prototype.add = function (idx) {
     idx = idx.index
   }
 
+  var added = []
   var path = getPath(idx, this._rootIdx)
-  var proofNodes = []
   for (var i = 0; i < path.length; i++) {
     var nodeIdx = path[i]
     if (!(nodeIdx in this._indicesInProof)) {
       this._indicesInProof[nodeIdx] = true
-      proofNodes.push(this._nodes[nodeIdx])
+      var node = this._nodes[nodeIdx]
+      added.push(node)
+      this._proof.push(node)
     }
   }
 
-  return proofNodes
+  return added
+}
+
+MerkleProofGenerator.prototype.proof = function () {
+  var proof = this._proof.slice()
+  proof.push(this._root)
+  return proof
 }
 
 function getPath (idx, rootIdx) {
