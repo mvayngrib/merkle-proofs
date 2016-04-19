@@ -1,5 +1,5 @@
 {
-  "name": "merkle-tree-proof-stream",
+  "name": "merkle-proofs",
   "version": "1.0.0",
   "description": "generate and verify merkle proofs",
   "main": "index.js",
