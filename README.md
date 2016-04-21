@@ -30,7 +30,7 @@ stream.on('data', function (data) {
 
 stream.on('end', function () {
   // indices are based on merkle-tree-stream's use of flat-tree, so to find the index of hello
-  // find the node in `proof` or `nodes` with node.data === new Buffer('hello')
+  // find the node in `proof` or `nodes` with node.data equal to new Buffer('hello')
   nodes.sort(function (a, b) {
     return a.index - b.index
   })
