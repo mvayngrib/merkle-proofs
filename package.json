@@ -1,6 +1,6 @@
 {
   "name": "merkle-proofs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "generate and verify merkle proofs",
   "main": "index.js",
   "scripts": {
