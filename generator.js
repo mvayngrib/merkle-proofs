@@ -33,12 +33,17 @@ MerkleProofGenerator.prototype.add = function (idx) {
   var path = getPath(idx, this._nodes, this._rootIdx)
   for (var i = 0; i < path.length; i++) {
     var nodeIdx = path[i]
-    if (!(nodeIdx in this._indicesInProof)) {
-      this._indicesInProof[nodeIdx] = true
-      var node = this._nodes[nodeIdx]
-      added.push(node)
-      this._proof.push(node)
+    if (nodeIdx in this._indicesInProof) continue
+
+    this._indicesInProof[nodeIdx] = true
+    var node = this._nodes[nodeIdx]
+    node = {
+      index: node.index,
+      hash: node.hash
     }
+
+    added.push(node)
+    this._proof.push(node)
   }
 
   return added
