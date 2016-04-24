@@ -30,7 +30,7 @@ MerkleProofGenerator.prototype.add = function (idx) {
   }
 
   var added = []
-  var path = getPath(idx, this._rootIdx)
+  var path = getPath(idx, this._nodes, this._rootIdx)
   for (var i = 0; i < path.length; i++) {
     var nodeIdx = path[i]
     if (!(nodeIdx in this._indicesInProof)) {
@@ -50,11 +50,12 @@ MerkleProofGenerator.prototype.proof = function () {
   return proof
 }
 
-function getPath (idx, rootIdx) {
+function getPath (leafIdx, nodeByIdx, rootIdx) {
   var path = []
-  while (idx !== rootIdx) {
-    path.push(flat.sibling(idx))
-    idx = flat.parent(idx)
+  while (leafIdx !== rootIdx) {
+    var sib = flat.sibling(leafIdx)
+    path.push(sib in nodeByIdx ? sib : leafIdx)
+    leafIdx = flat.parent(leafIdx)
   }
 
   return path

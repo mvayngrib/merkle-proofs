@@ -22,10 +22,17 @@ function merkleProofVerifier (opts) {
   var parentHasher = opts.parent
 
   return function verify (leaf, idx) {
-    var cur = leafHasher({ data: new Buffer(leaf) })
+    if (typeof leaf === 'object') {
+      // accept node object
+      idx = leaf.index
+      leaf = leaf.data
+    }
+
+    var cur = leafHasher({ data: toBuffer(leaf) })
     while (idx !== rootIdx) {
       var siblingIdx = flat.sibling(idx)
-      var sibling = nodeByIndex[siblingIdx]
+      // node could be an only child
+      var sibling = nodeByIndex[siblingIdx] || nodeByIndex[idx]
       if (!sibling) return false
 
       var left = idx < siblingIdx ? cur : sibling
@@ -55,4 +62,8 @@ function equals (a, b) {
   }
 
   return true
+}
+
+function toBuffer (data) {
+  return Buffer.isBuffer(data) ? data : new Buffer(data)
 }
