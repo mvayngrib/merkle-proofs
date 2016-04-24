@@ -18,15 +18,19 @@ var MERKLE_OPTS = {
 proveVerify({
   data: ['a', 'b', 'c', 'd', 'e'],
   prove: ['a'],
-  // notProven: ['b', 'c', 'd', 'e'],
   proofIndices: [2, 5, 11, 7]
 })
 
 proveVerify({
   data: ['a', 'b', 'c', 'd', 'e'],
   prove: ['a', 'd'],
-  // notProven: ['b', 'c', 'e'],
   proofIndices: [2, 5, 11, 4, 1, 7]
+})
+
+proveVerify({
+  data: ['a', 'b', 'c', 'd', 'e', 'f'],
+  prove: ['e'],
+  proofIndices: [10, 9, 3, 7]
 })
 
 function proveVerify (opts) {
