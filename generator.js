@@ -37,11 +37,7 @@ MerkleProofGenerator.prototype.add = function (idx) {
 
     this._indicesInProof[nodeIdx] = true
     var node = this._nodes[nodeIdx]
-    node = {
-      index: node.index,
-      hash: node.hash
-    }
-
+    node = minify(node)
     added.push(node)
     this._proof.push(node)
   }
@@ -51,7 +47,7 @@ MerkleProofGenerator.prototype.add = function (idx) {
 
 MerkleProofGenerator.prototype.proof = function () {
   var proof = this._proof.slice()
-  proof.push(this._root)
+  proof.push(minify(this._root))
   return proof
 }
 
@@ -68,4 +64,11 @@ function getPath (leafIdx, nodeByIdx, rootIdx) {
 
 function nearestPowerOf2 (n) {
   return Math.ceil(Math.log(n) / Math.log(2))
+}
+
+function minify (node) {
+  return {
+    index: node.index,
+    hash: node.hash
+  }
 }
